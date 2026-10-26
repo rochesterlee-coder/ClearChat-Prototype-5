@@ -78,6 +78,14 @@
         }
       ],
       "category": "public.app-category.social-networking"
-    }
+    },
+    "protocols": [
+      {
+        "name": "ClearChat Authentication",
+        "schemes": [
+          "clearchat"
+        ]
+      }
+    ]
   }
 }

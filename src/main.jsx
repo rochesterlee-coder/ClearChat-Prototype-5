@@ -89,6 +89,32 @@ function App(){
     const {data:listener}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user||null));
     return ()=>listener.subscription.unsubscribe();
   },[]);
+
+  // Electron returns from the email link through the clearchat:// deep link.
+  useEffect(()=>{
+    if(!supabase || !window.clearchatDesktop?.isDesktop) return;
+    const handleAuthUrl=async(rawUrl)=>{
+      try {
+        const url=new URL(rawUrl);
+        const errorDescription=url.searchParams.get('error_description');
+        if(errorDescription){setNotice(decodeURIComponent(errorDescription.replace(/\+/g,' ')));return;}
+        const code=url.searchParams.get('code');
+        if(code){
+          const {error}=await supabase.auth.exchangeCodeForSession(code);
+          setNotice(error?`Desktop sign-in failed: ${error.message}`:'Signed in to ClearChat desktop!');
+          return;
+        }
+        const hash=new URLSearchParams(url.hash.replace(/^#/,' '));
+        const access_token=hash.get('access_token'),refresh_token=hash.get('refresh_token');
+        if(access_token&&refresh_token){
+          const {error}=await supabase.auth.setSession({access_token,refresh_token});
+          setNotice(error?`Desktop sign-in failed: ${error.message}`:'Signed in to ClearChat desktop!');
+        } else setNotice('The sign-in link did not contain a session code. Request a fresh link.');
+      } catch(e){setNotice('Could not complete desktop sign-in. Request a fresh email link.');}
+    };
+    const unsubscribe=window.clearchatDesktop.onAuthCallback(handleAuthUrl);
+    return unsubscribe;
+  },[]);
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:'smooth'});},[roomMessages.length,active]);
   useEffect(()=>{
     if(!supabase||!user) return;
@@ -145,7 +171,8 @@ function App(){
   const signIn=async()=>{
     if(!supabase){setNotice('Add your Supabase URL and key in .env to enable online accounts. Demo mode is active.');return;}
     if(!profile.email.includes('@')){setNotice('Enter a valid email address first.');return;}
-    const {error}=await supabase.auth.signInWithOtp({email:profile.email,options:{emailRedirectTo:window.location.origin}});
+    const redirectTo=window.clearchatDesktop?.isDesktop?'clearchat://auth/callback':window.location.origin;
+    const {error}=await supabase.auth.signInWithOtp({email:profile.email,options:{emailRedirectTo:redirectTo}});
     setNotice(error?error.message:'Magic sign-in link sent! Check your email.');
   };
   const signOut=async()=>{if(supabase) await supabase.auth.signOut();setUser(null);setNotice('Signed out.');};

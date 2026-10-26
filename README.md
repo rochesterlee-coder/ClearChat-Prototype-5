@@ -23,3 +23,11 @@ Only use the Supabase publishable/anon key in the client, never a service-role k
 
 ## Known feature limits
 This repairs relative asset loading for Electron (the prior blank window) and replaces the app icon with a calendar + phone design. The current React app is still a prototype: full shared messaging depends on configured Supabase and its database schema; shared voice messages, video calls, and server-scheduled notifications while the app is closed are not fully implemented. The PWA must be hosted over HTTPS for installability and service-worker behavior. The PWA can be used on phones and Chromebooks, but this workflow does not produce native iOS or Android store packages.
+
+
+## Desktop email sign-in callback
+The desktop build now registers the `clearchat://` protocol and requests email sign-in links that return to `clearchat://auth/callback`. In Supabase Dashboard → Authentication → URL Configuration, add this exact Redirect URL as an additional allowed URL:
+
+`clearchat://auth/callback`
+
+Keep the existing Netlify URL and wildcard too, so web sign-in continues to work. After adding the redirect, rebuild and reinstall the Windows artifact from a fresh GitHub Actions run. Test with a newly requested email link; old links still contain their original redirect.
