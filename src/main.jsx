@@ -56,6 +56,8 @@ function App(){
   const [showGame,setShowGame]=useState(false);
   const [alarmEvent,setAlarmEvent]=useState(null);
   const [notice,setNotice]=useState('');
+  const [isSendingSignIn,setIsSendingSignIn]=useState(false);
+  const [signInCooldownUntil,setSignInCooldownUntil]=useState(0);
   const [mobileMenu,setMobileMenu]=useState(false);
   const [recording,setRecording]=useState(false);
   const [audioUrl,setAudioUrl]=useState('');
@@ -169,11 +171,29 @@ function App(){
 
   const askNotifications=async()=>{if(!('Notification' in window)){setNotice('This browser does not support notifications.');return;} const p=await Notification.requestPermission();setNotice(p==='granted'?'Notifications enabled for this browser.':'Notifications were not enabled.');};
   const signIn=async()=>{
+    if(isSendingSignIn)return;
+    if(Date.now()<signInCooldownUntil){
+      const wait=Math.ceil((signInCooldownUntil-Date.now())/1000);
+      setNotice(`Please wait about ${wait} seconds before requesting another sign-in email. Check your inbox and spam folder first.`);
+      return;
+    }
     if(!supabase){setNotice('Add your Supabase URL and key in .env to enable online accounts. Demo mode is active.');return;}
-    if(!profile.email.includes('@')){setNotice('Enter a valid email address first.');return;}
-    const redirectTo=window.clearchatDesktop?.isDesktop?'clearchat://auth/callback':window.location.origin;
-    const {error}=await supabase.auth.signInWithOtp({email:profile.email,options:{emailRedirectTo:redirectTo}});
-    setNotice(error?error.message:'Magic sign-in link sent! Check your email.');
+    const email=profile.email.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setNotice('Enter a valid email address first.');return;}
+    setIsSendingSignIn(true);
+    try{
+      const redirectTo=window.clearchatDesktop?.isDesktop?'clearchat://auth/callback':window.location.origin;
+      const {error}=await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo}});
+      if(error){
+        const message=String(error.message||'');
+        if(/rate.?limit|too many requests|email rate limit/i.test(message)){
+          setSignInCooldownUntil(Date.now()+60000);
+          setNotice('Supabase email rate limit reached. Wait a few minutes before trying again, and check your inbox/spam for an earlier link. Repeated requests will not bypass the limit.');
+        }else setNotice(message||'Could not send the sign-in email. Please try again later.');
+      }else setNotice('Sign-in email requested! Check your inbox and spam folder before requesting another link.');
+    }catch{
+      setNotice('Could not reach the sign-in service. Check your internet connection and try again later.');
+    }finally{setIsSendingSignIn(false);}
   };
   const signOut=async()=>{if(supabase) await supabase.auth.signOut();setUser(null);setNotice('Signed out.');};
   const createRoom=async()=>{
@@ -270,7 +290,7 @@ function App(){
     <aside className="right-panel"><div className="right-heading"><h3>Room overview</h3><button className="icon-btn" onClick={()=>setNotice('Room settings will be available in a future version.')}><Settings size={17}/></button></div><div className="overview-card"><div className="overview-top"><div className="overview-icon"><Users size={20}/></div><span className="online-label"><i/> Group space</span></div><h3>{currentRoom?.name}</h3><p>{currentRoom?.description||'Your shared space'}</p><div className="code-box"><span>ROOM CODE</span><strong>{currentRoom?.code}</strong><button onClick={()=>{navigator.clipboard?.writeText(currentRoom?.code||'');setNotice('Room code copied.')}}>Copy</button></div><div className="overview-foot"><ShieldCheck size={14}/> Share the code only with people you trust.</div></div>
       <div className="side-section-title"><h3>Coming up</h3><button onClick={()=>setTab('events')}>See all</button></div>{roomEvents.length===0?<div className="mini-empty"><CalendarDays size={21}/><p>No upcoming events</p><button onClick={()=>setEventModal(true)}>+ Add an event</button></div>:roomEvents.slice(0,3).map(e=><button className="mini-event" key={e.id} onClick={()=>setTab('events')}><div className="mini-date"><b>{new Date(e.starts_at).getDate()}</b><span>{new Date(e.starts_at).toLocaleDateString([],{month:'short'}).toUpperCase()}</span></div><div><b>{e.title}</b><span>{time(e.starts_at)} · {e.venue}</span><small><Bell size={12}/> 30-min reminder</small></div></button>)}
       <div className="reminder-card"><div className="reminder-art"><Bell size={22}/><span/></div><div><b>Never miss the plan</b><p>Enable browser notifications to hear about reminders while ClearChat is open.</p><button onClick={askNotifications}>Enable notifications <span>→</span></button></div></div>
-      <div className="account-card"><label htmlFor="display-name">Your display name</label><input id="display-name" value={profile.name} onChange={e=>{setProfile(p=>({...p,name:e.target.value}));localStorage.setItem('cc-name',e.target.value)}} placeholder="e.g. Alex"/><label htmlFor="email">Email sign-in</label><input id="email" type="email" value={profile.email} onChange={e=>{setProfile(p=>({...p,email:e.target.value}));localStorage.setItem('cc-email',e.target.value)}} placeholder="you@example.com"/><button className="outline-btn full-btn" onClick={signIn}>{user?'Signed in ✓':'Send sign-in link'}</button><small>{isConfigured?'Passwordless sign-in via Supabase.':'Demo mode: connect Supabase to enable accounts and shared rooms.'}</small></div>
+      <div className="account-card"><label htmlFor="display-name">Your display name</label><input id="display-name" value={profile.name} onChange={e=>{setProfile(p=>({...p,name:e.target.value}));localStorage.setItem('cc-name',e.target.value)}} placeholder="e.g. Alex"/><label htmlFor="email">Email sign-in</label><input id="email" type="email" value={profile.email} onChange={e=>{setProfile(p=>({...p,email:e.target.value}));localStorage.setItem('cc-email',e.target.value)}} placeholder="you@example.com"/><button className="outline-btn full-btn" onClick={signIn} disabled={isSendingSignIn}>{user?'Signed in ✓':isSendingSignIn?'Sending…':'Send sign-in link'}</button><small>{isConfigured?'Passwordless sign-in via Supabase.':'Demo mode: connect Supabase to enable accounts and shared rooms.'}</small></div>
     </aside>
     {notice&&<div className="toast" role="status"><Check size={17}/><span>{notice}</span><button onClick={()=>setNotice('')}><X size={15}/></button></div>}
     {alarmEvent&&<div className="alarm-backdrop"><div className="alarm-card"><div className="alarm-bell"><Bell size={30}/></div><span className="eyebrow">CLEARCHAT EVENT REMINDER</span><h2>{alarmEvent.title||'Your event is starting soon!'}</h2><div className="alarm-detail"><span>Venue:</span><b>{alarmEvent.venue||'Not specified'}</b></div><div className="alarm-detail"><span>Time It Starts:</span><b>{alarmEvent.startsAt||'See event details'}</b></div><div className="alarm-detail"><span>Date:</span><b>{alarmEvent.date||'See event details'}</b></div><p>This alarm rings while this page is active. Snoozing will remind you again in 10 minutes while the page remains open.</p><button className="primary-btn alarm-ack" onClick={()=>{setAlarmEvent(null);setNotice('Got the message! Reminder acknowledged.')}}>✓ Got The Message</button><button className="outline-btn alarm-later" onClick={()=>{const ev=alarmEvent;setAlarmEvent(null);setNotice('Snoozed for 10 minutes. Keep ClearChat open.');setTimeout(()=>setAlarmEvent(ev),600000);}}>Do It Later · 10 min</button></div></div>}\n    {roomModal&&<div className="modal-backdrop" onClick={()=>setRoomModal(false)}><div className="modal" onClick={e=>e.stopPropagation()}><div className="modal-head"><div><span className="eyebrow">{joinMode?'JOIN YOUR PEOPLE':'START A GROUP'}</span><h2>{joinMode?'Join a room':'Create a room'}</h2><p>{joinMode?'Enter the six-digit code shared by a friend.':'Create a space for your friends, class or team.'}</p></div><button className="icon-btn" onClick={()=>setRoomModal(false)}><X size={19}/></button></div>{joinMode?<form onSubmit={e=>{e.preventDefault();joinRoom()}}><label>Six-digit room code</label><input autoFocus inputMode="numeric" maxLength={6} value={roomCode} onChange={e=>setRoomCode(e.target.value.replace(/\\D/g,''))} placeholder="e.g. 672536"/><button className="primary-btn modal-submit" type="submit">Join room <span>→</span></button><button type="button" className="switch-mode" onClick={()=>setJoinMode(false)}>Want to create a room instead?</button></form>:<form onSubmit={e=>{e.preventDefault();createRoom()}}><label>Room name</label><input autoFocus maxLength={45} value={roomName} onChange={e=>setRoomName(e.target.value)} placeholder="e.g. Weekend Crew"/><div className="modal-note"><ShieldCheck size={17}/><span>A unique six-digit code will be created for you to share.</span></div><button className="primary-btn modal-submit" type="submit">Create room <span>→</span></button><button type="button" className="switch-mode" onClick={()=>setJoinMode(true)}>Have a room code? Join instead.</button></form>}</div></div>}
