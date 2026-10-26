@@ -1,0 +1,19 @@
+{
+  "name": "ClearChat",
+  "short_name": "ClearChat",
+  "description": "Group chat, announcements, events and reminders.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f7f9f8",
+  "theme_color": "#087c62",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./clearchat-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "."
+}
