@@ -4,13 +4,80 @@
 .offline-pill{display:inline-flex;align-items:center;gap:6px;background:#fff4df;border:1px solid #f2dfb5;color:#986a16;border-radius:20px;padding:7px 10px;font-size:9px;font-weight:700;white-space:nowrap}.game-launch-card{display:flex;align-items:center;gap:17px;border:1px solid #e4ece7;background:#fff;border-radius:14px;padding:20px;max-width:600px}.game-2048-icon{width:76px;height:76px;flex-shrink:0;border-radius:15px;background:#eee4d6;display:grid;place-items:center;font:800 23px Manrope,sans-serif;color:#776e65}.game-launch-card h3{font:700 14px Manrope,sans-serif;margin:0 0 7px;color:#29483b}.game-launch-card p{font-size:11px;line-height:1.6;color:#87968f;margin:0 0 13px}.offline-shell{min-height:100dvh;background:#faf8f2;padding:clamp(12px,4vw,40px);display:grid;place-items:center}.offline-game{width:min(100%,470px);position:relative}.game-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:25px}.game-title{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:17px}.game-title h2{font:800 42px Manrope,sans-serif;letter-spacing:-2px;color:#776e65;margin:3px 0}.game-title p{font-size:11px;color:#8f887d;line-height:1.5;max-width:245px;margin:0}.scores{display:flex;gap:6px}.scores>div{min-width:62px;background:#bbada0;border-radius:6px;text-align:center;padding:7px 8px;color:white}.scores span,.scores b{display:block}.scores span{font-size:8px;letter-spacing:.7px;color:#eee4da}.scores b{font:700 17px Manrope,sans-serif;margin-top:3px}.board-2048{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:9px;background:#bbada0;border-radius:9px;aspect-ratio:1;touch-action:pan-y}.tile{border-radius:6px;background:#d8cec2;display:grid;place-items:center;font:800 clamp(20px,6vw,32px) Manrope,sans-serif;color:#776e65;min-width:0}.tile-2{background:#eee4da}.tile-4{background:#ede0c8}.tile-8{background:#f2b179;color:#fffaf3}.tile-16{background:#f59563;color:#fffaf3}.tile-32{background:#f67c5f;color:#fffaf3}.tile-64{background:#f65e3b;color:#fffaf3}.tile-128,.tile-256,.tile-512{background:#edcf72;color:#fffaf3;font-size:clamp(17px,5vw,26px)}.tile-1024,.tile-2048{background:#edc53f;color:#fffaf3;font-size:clamp(14px,4vw,22px)}.game-controls{display:none;margin:14px auto 0;gap:6px;flex-direction:column;align-items:center}.game-controls>div{display:flex;gap:8px}.game-controls button{width:48px;height:42px;border:0;border-radius:8px;background:#8f8376;color:white;font-size:21px}.game-help{font-size:10px;line-height:1.6;color:#938a7e;margin:15px 0 10px}.game-over{position:absolute;left:10%;right:10%;top:40%;padding:20px;background:#ffffffed;border:1px solid #e7e0d5;border-radius:12px;text-align:center;box-shadow:0 10px 35px #4a3c2a20}.game-over h3{margin:0 0 7px;font:800 22px Manrope;color:#776e65}.game-over p{font-size:12px;color:#8b8276}.alarm-backdrop{position:fixed;inset:0;z-index:50;background:#17382de8;backdrop-filter:blur(8px);display:grid;place-items:center;padding:18px;animation:alarm-pulse 1.5s infinite alternate}.alarm-card{width:min(100%,410px);background:#fff;border-radius:19px;padding:27px;box-shadow:0 25px 90px #0004;text-align:center}.alarm-bell{width:62px;height:62px;border-radius:20px;background:#fff0dc;color:#bc791b;display:grid;place-items:center;margin:0 auto 17px;animation:bell-bounce .5s infinite alternate}.alarm-card h2{font:800 23px Manrope;color:#183b2e;letter-spacing:-.7px;margin:8px 0 20px}.alarm-detail{display:flex;justify-content:space-between;gap:16px;text-align:left;border-bottom:1px solid #edf1ed;padding:12px 0;font-size:12px}.alarm-detail span{color:#829188}.alarm-detail b{color:#2f4d40;text-align:right}.alarm-card>p{font-size:10px;line-height:1.65;color:#87958d;margin:16px 0}.alarm-ack,.alarm-later{width:100%;padding:13px;margin-top:7px;font-size:11px}.alarm-later{justify-content:center}@keyframes alarm-pulse{from{background:#17382de8}to{background:#2e5949ef}}@keyframes bell-bounce{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}@media(max-width:720px){.game-controls{display:flex}.game-title h2{font-size:36px}.board-2048{gap:7px;padding:7px}.alarm-card{padding:22px}.alarm-card h2{font-size:21px}.game-launch-card{padding:15px;align-items:flex-start}.game-2048-icon{width:58px;height:58px;font-size:18px}.game-launch-card p{font-size:10px}}
 
 
-/* Fixed app frame: keep the page still and scroll only the active content panel. */
-html,body,#root{height:100%;min-height:0}
-body{overflow:hidden}
-.app-shell{height:100dvh;min-height:0;overflow:hidden}
-.sidebar{height:100%;min-height:0;overflow-y:auto}
-.main-panel{height:100%;min-height:0;overflow:hidden}
-.chat-area{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
-.right-panel{height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 
-.full-btn:disabled{opacity:.65;cursor:wait;background:#f7faf8}
+/* Fixed app frame: only content panels scroll */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+}
+
+#root {
+  overflow: hidden;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 306px;
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.main-panel {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-area {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.right-panel {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1150px) {
+  .app-shell {
+    grid-template-columns: 225px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    display: block;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .main-panel {
+    height: 100%;
+    min-height: 0;
+  }
+}
+
